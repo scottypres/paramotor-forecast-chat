@@ -48,4 +48,11 @@ module.exports = async function handler(req, res) {
     console.error('Error:', error);
     res.status(500).json({ error: error.message });
   }
+// Explicitly set the runtime to Node.js
+module.exports.config = {
+  runtime: 'nodejs',      // ← THIS LINE IS CRITICAL
+  maxDuration: 300,       // 5 minutes timeout
+  memory: 2048
+};
+
 }
