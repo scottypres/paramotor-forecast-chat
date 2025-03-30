@@ -9,7 +9,16 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  const userMessage = req.body.message;
+  // Parse the request body
+  let body;
+  try {
+    body = JSON.parse(req.body);
+  } catch (e) {
+    console.error('Error parsing request body:', e);
+    return res.status(400).json({ error: "Invalid JSON in request body" });
+  }
+
+  const userMessage = body.message;
 
   if (!userMessage) {
     return res.status(400).json({ error: "Message required" });
@@ -19,7 +28,7 @@ export default async function handler(req, res) {
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
     const completion = await openai.chat.completions.create({
-      model: "gpt-4-0125-preview",
+      model: "gpt-3.5-turbo",
       messages: [
         {
           role: "system",
