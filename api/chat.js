@@ -1,3 +1,5 @@
+import OpenAI from 'openai';
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -14,26 +16,25 @@ export default async function handler(req, res) {
   }
 
   try {
-    const response = await fetch('https://chatgpt.com/g/g-67e8db942e988191b886bf632bcb62f8-paramotor-forecast-guide', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
-      },
-      body: JSON.stringify({
-        messages: [{
-          role: 'user',
+    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+    const completion = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [
+        {
+          role: "system",
+          content: "You are a paramotor forecast guide that analyzes weather data for paramotor pilots and suggests the best times to fly."
+        },
+        {
+          role: "user",
           content: userMessage
-        }]
-      })
+        }
+      ],
+      temperature: 0.7,
+      max_tokens: 1000
     });
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    res.status(200).json({ reply: data.choices[0].message.content });
+    res.status(200).json({ reply: completion.choices[0].message.content });
   } catch (error) {
     console.error('Error:', error);
     res.status(500).json({ error: error.message });
