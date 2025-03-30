@@ -1,5 +1,12 @@
 const OpenAI = require('openai');
 
+// Configuration must be outside the handler function
+exports.config = {
+  runtime: 'nodejs',
+  maxDuration: 300, // 5 minutes
+  memory: 2048
+};
+
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -48,11 +55,4 @@ module.exports = async function handler(req, res) {
     console.error('Error:', error);
     res.status(500).json({ error: error.message });
   }
-};
-
-// <-- CONFIGURATION MUST BE OUTSIDE FUNCTION BLOCK -->
-module.exports.config = {
-  runtime: 'nodejs',      // CRITICAL to avoid 10s timeout
-  maxDuration: 300,       // Allows 5-minute timeout
-  memory: 2048
 };

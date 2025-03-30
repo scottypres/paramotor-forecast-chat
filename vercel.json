@@ -22,7 +22,6 @@
   ],
   "functions": {
     "api/chat.js": {
-      "runtime": "nodejs",
       "memory": 2048,
       "maxDuration": 300
     }
