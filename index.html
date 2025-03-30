@@ -29,6 +29,7 @@
             border: 1px solid #ddd;
             border-radius: 4px;
             resize: vertical;
+            overflow-y: auto;
         }
         .input-group {
             display: flex;
@@ -65,6 +66,11 @@
             background-color: #f5f5f5;
             margin-right: 20%;
         }
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 10px 0;
+        }
     </style>
 </head>
 <body>
@@ -80,6 +86,7 @@
         <div class="chat-section">
             <h2>Chat</h2>
             <div id="chatBox" class="chat-box"></div>
+            <div class="loading" id="loading">Processing...</div>
             <div class="input-group">
                 <input type="text" id="messageInput" placeholder="Type your message...">
                 <button onclick="sendMessage()">Send</button>
@@ -88,7 +95,7 @@
     </div>
 
     <script>
-        const API_URL = 'https://chatgpt.com/g/g-67e8db942e988191b886bf632bcb62f8-paramotor-forecast-guide';
+        const API_URL = 'https://paramotor-forecast-chat.vercel.app/api/chat';
 
         async function uploadFile() {
             const fileInput = document.getElementById('jsonFile');
@@ -103,7 +110,7 @@
                 const reader = new FileReader();
                 reader.onload = async (e) => {
                     const jsonData = JSON.parse(e.target.result);
-                    await sendToChatGPT(JSON.stringify(jsonData));
+                    await sendMessage(JSON.stringify(jsonData));
                 };
                 reader.readAsText(file);
             } catch (error) {
@@ -121,22 +128,23 @@
             addMessage(message, 'user');
             messageInput.value = '';
             
-            await sendToChatGPT(message);
+            await sendToAPI(message);
         }
 
-        async function sendToChatGPT(content) {
+        async function sendToAPI(content) {
+            const loading = document.getElementById('loading');
+            loading.style.display = 'block';
+            
             try {
                 const response = await fetch(API_URL, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${API_KEY}`
+                        'Accept': 'application/json',
                     },
+                    mode: 'cors',
                     body: JSON.stringify({
-                        messages: [{
-                            role: 'user',
-                            content: content
-                        }]
+                        message: content
                     })
                 });
 
@@ -145,11 +153,15 @@
                 }
 
                 const data = await response.json();
-                const botResponse = data.choices[0].message.content;
-                addMessage(botResponse, 'bot');
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                addMessage(data.reply, 'bot');
             } catch (error) {
                 console.error('Error:', error);
-                addMessage('Sorry, there was an error processing your request.', 'bot');
+                addMessage(`Error: ${error.message}`, 'bot');
+            } finally {
+                loading.style.display = 'none';
             }
         }
 
