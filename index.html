@@ -136,6 +136,7 @@
             loading.style.display = 'block';
             
             try {
+                console.log('Sending request to:', API_URL);
                 const response = await fetch(API_URL, {
                     method: 'POST',
                     headers: {
@@ -148,17 +149,21 @@
                     })
                 });
 
+                console.log('Response status:', response.status);
                 if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Error response:', errorText);
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
 
                 const data = await response.json();
+                console.log('Response data:', data);
                 if (data.error) {
                     throw new Error(data.error);
                 }
                 addMessage(data.reply, 'bot');
             } catch (error) {
-                console.error('Error:', error);
+                console.error('Error details:', error);
                 addMessage(`Error: ${error.message}`, 'bot');
             } finally {
                 loading.style.display = 'none';
