@@ -9,10 +9,10 @@ module.exports = async function handler(req, res) {
     return res.status(200).end();
   }
 
-  // Parse the request body
+  // Parse the request body safely
   let body;
   try {
-    body = JSON.parse(req.body);
+    body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
   } catch (e) {
     console.error('Error parsing request body:', e);
     return res.status(400).json({ error: "Invalid JSON in request body" });
@@ -48,11 +48,11 @@ module.exports = async function handler(req, res) {
     console.error('Error:', error);
     res.status(500).json({ error: error.message });
   }
-// Explicitly set the runtime to Node.js
-module.exports.config = {
-  runtime: 'nodejs',      // ← THIS LINE IS CRITICAL
-  maxDuration: 300,       // 5 minutes timeout
-  memory: 2048
 };
 
-}
+// <-- CONFIGURATION MUST BE OUTSIDE FUNCTION BLOCK -->
+module.exports.config = {
+  runtime: 'nodejs',      // CRITICAL to avoid 10s timeout
+  maxDuration: 300,       // Allows 5-minute timeout
+  memory: 2048
+};
