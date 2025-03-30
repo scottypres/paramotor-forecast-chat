@@ -109,13 +109,25 @@
             try {
                 const reader = new FileReader();
                 reader.onload = async (e) => {
-                    const jsonData = JSON.parse(e.target.result);
-                    await sendMessage(JSON.stringify(jsonData));
+                    try {
+                        const jsonData = JSON.parse(e.target.result);
+                        // Display the uploaded JSON content
+                        addMessage(`Uploaded JSON data: ${JSON.stringify(jsonData, null, 2)}`, 'user');
+                        // Send the JSON data to the API
+                        await sendToAPI(JSON.stringify(jsonData));
+                    } catch (parseError) {
+                        console.error('Error parsing JSON:', parseError);
+                        addMessage('Error: Invalid JSON file format', 'bot');
+                    }
+                };
+                reader.onerror = (error) => {
+                    console.error('Error reading file:', error);
+                    addMessage('Error: Could not read file', 'bot');
                 };
                 reader.readAsText(file);
             } catch (error) {
-                console.error('Error reading file:', error);
-                alert('Error reading file. Please make sure it\'s a valid JSON file.');
+                console.error('Error handling file:', error);
+                addMessage('Error: Could not process file', 'bot');
             }
         }
 
