@@ -1,0 +1,12 @@
+{
+  "name": "paramotor-forecast-chat",
+  "version": "1.0.0",
+  "description": "Paramotor Forecast Chat Application",
+  "main": "api/chat.js",
+  "scripts": {
+    "start": "node api/chat.js"
+  },
+  "dependencies": {
+    "openai": "^4.28.0"
+  }
+} 
