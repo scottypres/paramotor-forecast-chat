@@ -15,5 +15,11 @@
       "src": "/(.*)",
       "dest": "/index.html"
     }
-  ]
+  ],
+  "functions": {
+    "api/chat.js": {
+      "memory": 1024,
+      "maxDuration": 60
+    }
+  }
 } 
