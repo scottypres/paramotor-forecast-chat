@@ -98,31 +98,22 @@
         const API_URL = 'https://paramotor-forecast-chat.vercel.app/api/chat';
 
         async function uploadFile() {
-            console.log('Upload button clicked');
             const fileInput = document.getElementById('jsonFile');
             const file = fileInput.files[0];
             
-            console.log('Selected file:', file);
-            
             if (!file) {
-                console.log('No file selected');
                 alert('Please select a file first');
                 return;
             }
 
             try {
-                console.log('Starting file read process');
                 const reader = new FileReader();
                 reader.onload = async (e) => {
-                    console.log('File read complete');
                     try {
-                        console.log('Attempting to parse JSON');
                         const jsonData = JSON.parse(e.target.result);
-                        console.log('JSON parsed successfully:', jsonData);
                         // Display the uploaded JSON content
                         addMessage(`Uploaded JSON data: ${JSON.stringify(jsonData, null, 2)}`, 'user');
                         // Send the JSON data to the API
-                        console.log('Sending JSON data to API');
                         await sendToAPI(JSON.stringify(jsonData));
                     } catch (parseError) {
                         console.error('Error parsing JSON:', parseError);
@@ -133,7 +124,6 @@
                     console.error('Error reading file:', error);
                     addMessage('Error: Could not read file', 'bot');
                 };
-                console.log('Starting file read');
                 reader.readAsText(file);
             } catch (error) {
                 console.error('Error handling file:', error);
