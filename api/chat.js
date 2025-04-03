@@ -1,9 +1,12 @@
 const OpenAI = require('openai');
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-// Configuration must be outside the handler function
+// Store a thread ID per sessionId
+const threadMap = new Map();
+
 exports.config = {
   runtime: 'nodejs',
-  maxDuration: 300, // 5 minutes
+  maxDuration: 300,
   memory: 2048
 };
 
@@ -16,7 +19,6 @@ module.exports = async function handler(req, res) {
     return res.status(200).end();
   }
 
-  // Parse the request body safely
   let body;
   try {
     body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
@@ -25,32 +27,50 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ error: "Invalid JSON in request body" });
   }
 
-  const userMessage = body.message;
+  const { message, sessionId } = body;
 
-  if (!userMessage) {
-    return res.status(400).json({ error: "Message required" });
+  if (!message || !sessionId) {
+    return res.status(400).json({ error: "Message and sessionId required" });
   }
 
   try {
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    // Get or create the thread for this session
+    let threadId = threadMap.get(sessionId);
+    if (!threadId) {
+      const thread = await openai.beta.threads.create();
+      threadId = thread.id;
+      threadMap.set(sessionId, threadId);
+      console.log(`New thread created for session ${sessionId}: ${threadId}`);
+    }
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
-      messages: [
-        {
-          role: "system",
-          content: "You are a paramotor forecast guide that analyzes weather data for paramotor pilots and suggests the best times to fly."
-        },
-        {
-          role: "user",
-          content: userMessage
-        }
-      ],
-      temperature: 0.7,
-      max_tokens: 1000
+    // Add user message
+    await openai.beta.threads.messages.create(threadId, {
+      role: 'user',
+      content: message
     });
 
-    res.status(200).json({ reply: completion.choices[0].message.content });
+    // Run the assistant
+    const run = await openai.beta.threads.runs.create(threadId, {
+      assistant_id: 'asst_caEWtM1PSJEwOMIRswzpNCoR'
+    });
+
+    // Poll until the assistant finishes
+    let runStatus = await openai.beta.threads.runs.retrieve(threadId, run.id);
+    const start = Date.now();
+    while (runStatus.status !== 'completed' && Date.now() - start < 10000) {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      runStatus = await openai.beta.threads.runs.retrieve(threadId, run.id);
+    }
+
+    if (runStatus.status !== 'completed') {
+      throw new Error("Assistant run timeout.");
+    }
+
+    // Get the assistant's reply
+    const messages = await openai.beta.threads.messages.list(threadId);
+    const latest = messages.data.find(msg => msg.role === 'assistant');
+    res.status(200).json({ reply: latest.content[0].text.value });
+
   } catch (error) {
     console.error('Error:', error);
     res.status(500).json({ error: error.message });

@@ -95,6 +95,13 @@
     </div>
 
     <script>
+        // Create or load sessionId from localStorage
+let sessionId = localStorage.getItem("sessionId");
+if (!sessionId) {
+  sessionId = crypto.randomUUID();
+  localStorage.setItem("sessionId", sessionId);
+}
+
         const API_URL = 'https://paramotor-forecast-chat.vercel.app/api/chat';
 
         async function uploadFile() {
@@ -157,8 +164,10 @@
                     },
                     mode: 'cors',
                     body: JSON.stringify({
-                        message: content
-                    })
+  message: content,
+  sessionId: sessionId
+})
+
                 });
 
                 console.log('Response status:', response.status);
