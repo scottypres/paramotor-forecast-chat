@@ -82,6 +82,7 @@
             <input type="file" id="jsonFile" accept=".json">
             <button onclick="uploadFile()">Upload</button>
         </div>
+        <button onclick="resetChatSession()">Reset Chat Memory</button>
 
         <div class="chat-section">
             <h2>Chat</h2>
@@ -95,6 +96,11 @@
     </div>
 
     <script>
+        function resetChatSession() {
+  localStorage.removeItem("sessionId");
+  location.reload(); // Optional: reload the page to trigger new session
+}
+
         // Create or load sessionId from localStorage
 let sessionId = localStorage.getItem("sessionId");
 if (!sessionId) {
